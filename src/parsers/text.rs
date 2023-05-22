@@ -1,4 +1,4 @@
-use crate::{Parser, ParserState, UnknownParserState};
+use crate::{Input, InputAndData, Parser};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct TextParser<'a> {
@@ -6,123 +6,86 @@ pub struct TextParser<'a> {
 }
 
 impl<'a> TextParser<'a> {
-    pub fn new(text: &'a str) -> TextParser<'a> {
+    pub const fn new(text: &'a str) -> TextParser {
         TextParser { text }
     }
 }
 
-impl<'b> Parser for TextParser<'b> {
-    type Output = &'b str;
+impl<'a> Parser for TextParser<'a> {
+    type Output = &'a str;
 
-    fn parse<'a>(&self, state: &'a UnknownParserState<'a>) -> ParserState<'a, Self::Output> {
-        let slice = &state.source[state.index..];
+    fn parse<'b>(&'b self, input: Input<'b>) -> InputAndData<'b, Self::Output> {
+        let slice = &input.source[input.index..];
 
-        if slice.starts_with(&self.text) {
-            ParserState {
-                data: Ok(self.text),
-                index: state.index + self.text.len(),
-                source: state.source,
-            }
+        if slice.starts_with(self.text) {
+            (
+                input.with_index(input.index + self.text.len()),
+                Ok(self.text),
+            )
         } else {
-            state.as_err(format!(
-                "Expected '{}'; found '{}'.",
-                self.text,
-                slice[0..(10).min(slice.len())].to_owned()
-            ))
+            (
+                input,
+                Err(format!(
+                    "Expected '{}'; found '{}'.",
+                    self.text,
+                    &slice[0..10.min(slice.len())]
+                )),
+            )
         }
     }
 }
 
-#[test]
-fn successful_parsing_from_start() {
-    let binding = ParserState::new("Hello world");
-    let state = binding.as_unknown();
-    let parser = TextParser::new("Hello");
-    let result = parser.parse(&state);
+#[macro_export]
+macro_rules! text {
+    ($x:literal) => {
+        $crate::TextParser::new($x)
+    };
+}
 
-    assert_eq!(
-        result,
-        ParserState {
-            data: Ok("Hello"),
-            index: 5,
-            source: "Hello world"
-        }
-    );
+#[macro_export]
+macro_rules! literal {
+    ($x:literal) => {
+        $crate::TextParser::new(concat!($x)).with_value($x)
+    };
 }
 
 #[test]
-fn failed_parsing_from_start() {
-    let binding = ParserState::new("Hello world");
-    let state = binding.as_unknown();
-    let parser = TextParser::new("Hi");
-    let result = parser.parse(&state);
+fn create_parser() {
+    let parser = TextParser::new("Hello");
 
-    assert_eq!(
-        result,
-        ParserState {
-            data: Err("Expected 'Hi'; found 'Hello worl'.".to_owned()),
-            index: 0,
-            source: "Hello world"
-        }
-    );
+    assert_eq!(parser, TextParser { text: "Hello" });
 }
 
 #[test]
-fn successful_parsing_from_middle() {
-    let binding = ParserState::new("Hello world");
-    let state = binding.as_unknown();
+fn successful_parse_at_start() {
     let parser = TextParser::new("Hello");
-    let result = parser.parse(&state);
+    let input = Input::new("Hello world!");
+    let (input, data) = parser.parse(input);
 
     assert_eq!(
-        result,
-        ParserState {
-            data: Ok("Hello"),
-            index: 5,
-            source: "Hello world"
+        input,
+        Input {
+            source: "Hello world!",
+            index: 5
         }
     );
 
-    let state = result.as_unknown();
-    let parser = TextParser::new(" ");
-    let result = parser.parse(&state);
-
-    assert_eq!(
-        result,
-        ParserState {
-            data: Ok(" "),
-            index: 6,
-            source: "Hello world"
-        }
-    );
+    assert_eq!(data, Ok("Hello"));
 }
 
 #[test]
-fn failed_parsing_from_middle() {
-    let binding = ParserState::new("Hello world");
-    let state = binding.as_unknown();
+fn failed_parse_at_start() {
     let parser = TextParser::new("Hello");
-    let result = parser.parse(&state);
+    let input = Input::new("Hi world!");
+    let (input, data) = parser.parse(input);
 
     assert_eq!(
-        result,
-        ParserState {
-            data: Ok("Hello"),
-            index: 5,
-            source: "Hello world"
+        input,
+        Input {
+            source: "Hi world!",
+            index: 0
         }
     );
 
-    let state = result.as_unknown();
-    let parser = TextParser::new("world");
-    let result = parser.parse(&state);
-
-    assert_eq!(
-        result,
-        ParserState {
-            data: Err("Expected 'world'; found ' world'.".to_owned()),
-            index: 5,
-            source: "Hello world"
-        }
-    );
+    assert_eq!(data, Err("Expected 'Hello'; found 'Hi world!'.".to_owned()));
 }
