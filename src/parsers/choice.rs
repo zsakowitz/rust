@@ -6,7 +6,7 @@ pub trait ParseAsChoice {
     fn parse_choice<'a>(&'a self, input: Input<'a>) -> InputAndData<'a, Self::Output>;
 }
 
-macro_rules! add_parse_as_seq_to_tuple {
+macro_rules! add_parse_as_choice_to_tuple {
     ($($x:ident),+) => {
         #[allow(non_snake_case)]
         impl< Z, $($x: Parser<Output = Z>),+  > ParseAsChoice for ( $($x),+ , ) {
@@ -29,26 +29,26 @@ macro_rules! add_parse_as_seq_to_tuple {
     };
 }
 
-add_parse_as_seq_to_tuple!(A);
-add_parse_as_seq_to_tuple!(A, B);
-add_parse_as_seq_to_tuple!(A, B, C);
-add_parse_as_seq_to_tuple!(A, B, C, D);
-add_parse_as_seq_to_tuple!(A, B, C, D, E);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S);
-add_parse_as_seq_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T);
+add_parse_as_choice_to_tuple!(A);
+add_parse_as_choice_to_tuple!(A, B);
+add_parse_as_choice_to_tuple!(A, B, C);
+add_parse_as_choice_to_tuple!(A, B, C, D);
+add_parse_as_choice_to_tuple!(A, B, C, D, E);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S);
+add_parse_as_choice_to_tuple!(A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T);
 
 pub struct TupleChoiceParser<T: ParseAsChoice> {
     parsers: T,

@@ -1,5 +1,6 @@
-use crate::{literal, text, InputAndData, Parser, TextParser};
+use crate::{InputAndData, Parser};
 
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum Either<A, B> {
     Left(A),
     Right(B),
@@ -37,7 +38,19 @@ impl<A: Parser, B: Parser> Parser for EitherParser<A, B> {
 
 #[test]
 fn string_and_number() {
+    use crate::{literal, text, Input};
+
     let left = text!("Hello");
     let right = literal!(42);
     let parser = EitherParser::new(left, right);
+
+    let state = Input::new("Hello world!");
+    let (input, state) = parser.parse(state);
+    assert_eq!(input, Input::new("Hello world!").with_index(5));
+    assert_eq!(state, Ok(Either::Left("Hello")));
+
+    let state = Input::new("42 worlds");
+    let (input, state) = parser.parse(state);
+    assert_eq!(input, Input::new("42 worlds").with_index(2));
+    assert_eq!(state, Ok(Either::Right(42)));
 }
